@@ -3,7 +3,7 @@ from typing import Dict, Tuple, List, Union, Any
 
 
 class Converter:
-    repr_str = "{hex(id(s))"
+    repr_str = ""
 
     def __repr__(self):
         cls = self.__class__
@@ -41,9 +41,11 @@ class Model(Converter):
                 fields.update(base.__annotations__)
 
         for field_name, field_type in fields.items():
-            print(field_name)
-            # some checks here
-            setattr(self, field_name, to_model(data[field_name[cutoff:]], field_type))
+            try:
+                setattr(self, field_name, to_model(data[field_name[cutoff:]], field_type))
+            except TypeError:
+                print(f"REEEEEEE: {field_name}")
+                raise
 
     def __contains__(self, item):
         return item in self.__annotations__
@@ -353,7 +355,7 @@ def to_model(data, model):
     if model is Any:
         return data # don't even touch it
     elif model is str:
-        return data if data else ""  # sometimes fields are None, so we return an empty string for type consistency
+        return data if data is not None else ""  # sometimes fields are None, so we return an empty string for type consistency
 
     if hasattr(model, "__origin__"):
         # this is a ghetto check for things like List[int] or smth
@@ -364,5 +366,6 @@ def to_model(data, model):
             return {to_model(k, model.__args__[0]): to_model(v, model.__args__[1]) for k, v in data.items()}
 
     # usually you can just call otherwise lol
-    return model(data)
+    # if the data endpoint is None, chances are calling a model on it will fail, so we can just return None
+    return model(data) if data is not None else None
 
