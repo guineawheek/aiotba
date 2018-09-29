@@ -92,15 +92,6 @@ class TeamSimple(Model):
 
 
 class Team(TeamSimple):
-    """
-    key = Field()
-    team_number = Field()
-    nickname = Field()
-    name = Field()
-    city = Field()
-    state_prov = Field()
-    country = Field()
-    """
     # these are supposedly NULL, mostly
     address: str
     postal_code: str
@@ -144,7 +135,7 @@ class EventSimple(Model):
     name: str
     event_code: str
     event_type: int
-    district: District
+    district: District  # nullable
     city: str
     state_prov: str
     country: str
@@ -160,19 +151,6 @@ class Webcast(Model):
 
 
 class Event(EventSimple):
-    """
-    key = Field()
-    name = Field()
-    event_code = Field()
-    event_type = Field()
-    district = District()
-    city = Field()
-    state_prov = Field()
-    country = Field()
-    start_date = Timestamp(fmt="%Y-%m-%d")
-    end_date = Timestamp(fmt="%Y-%m-%d")
-    year = Field()
-    """
     short_name: str
     event_type_string: str
     week: int
@@ -354,8 +332,6 @@ class Award(Model):
 def to_model(data, model):
     if model is Any:
         return data # don't even touch it
-    elif model is str:
-        return data if data is not None else ""  # sometimes fields are None, so we return an empty string for type consistency
 
     if hasattr(model, "__origin__"):
         # this is a ghetto check for things like List[int] or smth
