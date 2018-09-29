@@ -32,7 +32,7 @@ class Model(Converter):
     def __init__(self, data):
 
         cutoff = len(self.__prefix__)
-        #self._data = data
+        # self._data = data
 
         # base classes annotations should be incorporated into the list of fields
         fields = dict(self.__annotations__)
@@ -127,7 +127,7 @@ class District(Model):
     year: int
 
 
-DistrictList = District # in line with API doc name
+DistrictList = District  # in line with API doc name
 
 
 class EventSimple(Model):
@@ -209,7 +209,6 @@ class PlayoffStatus(Model):
 
 class TeamEventStatus(Model):
     class RankStatus(Model):
-
         num_teams: int
         ranking: RankingEntry
         sort_order_info: List[ValueInfo]
@@ -231,7 +230,7 @@ class TeamEventStatus(Model):
     last_match_key: str
 
 
-class EventRanking(Model):
+class EventRankings(Model):
     class EventRankingEntry(RankingEntry):
         extra_stats: List[float]
     rankings: List[EventRankingEntry]
@@ -262,12 +261,23 @@ class EventInsights(Model):
 
 
 class EventOPRs(Model):
-    oprs: dict
-    dprs: dict
-    ccwms: dict
+    oprs: Dict[str, float]
+    dprs: Dict[str, float]
+    ccwms: Dict[str, float]
 
 
-EventPredictions = Any  # year specific, no documented API
+EventPredictions = dict  # year specific, no documented API
+
+
+class DistrictRanking(Model):
+    class DistrictEventPoints(EventDistrictPoints.DistrictPointsData):
+        event_key: str
+        district_cmp: bool
+    team_key: str
+    rank: int
+    rookie_bonus: int
+    point_total: int
+    event_points: List[DistrictEventPoints]
 
 
 class MatchAlliance(Model):
