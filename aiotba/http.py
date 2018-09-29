@@ -87,11 +87,7 @@ class TBASession:
                 raise AioTBAError(f"Request to {endpoint} failed with {response.status} {response.reason}")
 
             return to_model(data, model)
-    """
-    status
-    /teams/[year]/{page}/[keys]
-    /team/
-    """
+
     async def status(self):
         return await self.req('/status', APIStatus)
 
@@ -194,31 +190,6 @@ class TBASession:
         return await self.req(f"/team/{team_key}/social_media", List[Media])
 
     # /event/ endpoints
-    """
-    /events/{year}...keys
-    /event/{event_key}
-       .../alliances, insights, oprs, predictions, rankings, district_points, teams(keys), matches(keys, timeseries),
-        .../awards
-    /event/{event_key}": {
-    "/event/{event_key}/simple": {
-    "/event/{event_key}/alliances": {
-    "/event/{event_key}/insights": {
-    "/event/{event_key}/oprs": {
-    "/event/{event_key}/predictions": {
-    "/event/{event_key}/rankings": {
-    "/event/{event_key}/district_points": {
-    "/event/{event_key}/teams": {
-    "/event/{event_key}/teams/simple": {
-    "/event/{event_key}/teams/keys": {
-    "/event/{event_key}/teams/statuses": {
-    "/event/{event_key}/matches": {
-    "/event/{event_key}/matches/simple": {
-    "/event/{event_key}/matches/keys": {
-    "/event/{event_key}/matches/timeseries": {
-    "/event/{event_key}/awards": {
-
-    """
-
     async def events(self, year, keys_only=False):
         if keys_only:
             return await self.req(f"/events/{year}/keys", List[str])
