@@ -37,7 +37,8 @@ class TBASession:
                 kill.append(endpoint)
         for k in kill:
             del self.cache[k]
-    """
+
+
     def convert_team_key(self, value):
         if isinstance(value, TeamSimple):
             return value.key
@@ -45,11 +46,13 @@ class TBASession:
         if value.startswith("frc"): return value
         else: return "frc" + value
 
+
     def convert_event_key(self, value):
         if isinstance(value, EventSimple):
             return value.key
         return str(value)
-    """
+
+
     async def close(self):
         await self.session.close()
 
@@ -111,22 +114,21 @@ class TBASession:
                 res += page
             return res
 
-    """
     async def team(self, team):
         team_key = self.convert_team_key(team)
-        return await self.req(f"/team/{team_key}", Team())
+        return await self.req(f"/team/{team_key}", Team)
 
     async def team_years_participated(self, team):
         team_key = self.convert_team_key(team)
-        return await self.req(f"/team/{team_key}/years_participated", Array(Field(int)))
+        return await self.req(f"/team/{team_key}/years_participated", List[int])
 
     async def team_districts(self, team):
         team_key = self.convert_team_key(team)
-        return await self.req(f"/team/{team_key}/districts", Array(District()))
+        return await self.req(f"/team/{team_key}/districts", List[District])
 
     async def team_robots(self, team):
         team_key = self.convert_team_key(team)
-        return await self.req(f"/team/{team_key}/robots", Array(TeamRobot()))
+        return await self.req(f"/team/{team_key}/robots", List[TeamRobot])
 
     async def team_events(self, team, year=None, keys_only=False):
         team_key = self.convert_team_key(team)
@@ -134,36 +136,34 @@ class TBASession:
         if year is not None:
             base += f"/{year}"
         if keys_only:
-            return await self.req(base + "/keys", Array(Field(str)))
+            return await self.req(base + "/keys", List[str])
         else:
-            return await self.req(base, Array((Event())))
+            return await self.req(base, List[Event])
 
     async def team_event_statuses(self, team, year):
         team_key = self.convert_team_key(team)
-        return await self.req(f"/team/{team_key}/events/{year}/statuses", Dict(Field(str), TeamEventStatus()))
+        return await self.req(f"/team/{team_key}/events/{year}/statuses", Dict[str, TeamEventStatus])
 
     async def team_event_matches(self, team, event, keys_only=False):
         team_key = self.convert_event_key(team)
         event_key = self.convert_event_key(event)
         if keys_only:
-            return await self.req(f"/team/{team_key}/event/{event_key}/matches/keys", Array(Field(str)))
+            return await self.req(f"/team/{team_key}/event/{event_key}/matches/keys", List[str])
         else:
-            return await self.req(f"/team/{team_key}/event/{event_key}/matches", Array(Match()))
+            return await self.req(f"/team/{team_key}/event/{event_key}/matches", List[Match])
 
     async def team_event_awards(self, team, event):
         team_key = self.convert_event_key(team)
         event_key = self.convert_event_key(event)
-        return await self.req(f"/team/{team_key}/event/{event_key}/awards", Array(Award()))
+        return await self.req(f"/team/{team_key}/event/{event_key}/awards", List[Award])
 
     async def team_event_status(self, team, event):
         team_key = self.convert_event_key(team)
         event_key = self.convert_event_key(event)
-        return await self.req(f"/team/{team_key}/event/{event_key}/status", TeamEventStatus())
+        return await self.req(f"/team/{team_key}/event/{event_key}/status", TeamEventStatus)
 
     async def team_awards(self, team, year=None):
         team_key = self.convert_event_key(team)
         base = f"/team/{team_key}"
         if year is not None:
             base += f"/{year}"
-    """
-# done?

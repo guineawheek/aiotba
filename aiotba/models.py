@@ -2,7 +2,6 @@ import datetime
 from typing import Dict, Tuple, List, Union, Any
 
 
-
 class Converter:
     repr_str = "{hex(id(s))"
 
@@ -15,7 +14,7 @@ class Timestamp(Converter):
     def __init__(self, fmt="%Y-%m-%d %H:%M:%S %z"):
         self.fmt = fmt
 
-    def convert(self, value):
+    def __call__(self, value) -> datetime.datetime:
         if self.fmt != "unix":
             return datetime.datetime.strptime(value, self.fmt)
         else:
@@ -23,7 +22,7 @@ class Timestamp(Converter):
 
 
 class HomeChampionship(Converter):
-    def __call__(self, value):
+    def __call__(self, value) -> Dict[int, str]:
         return {int(k): v for k, v in value.items()} if value else {}
 
 
@@ -116,49 +115,50 @@ class Team(TeamSimple):
     # rookie year for certain teams, such as iterating over their seasons. Here, we just set it to zero if we see None.
     rookie_year: lambda d: int(d) if d else 0
     motto: str
-    home_championship = HomeChampionship()
+    home_championship: HomeChampionship()
 
     repr_str = "{s.team_number} {s.nickname}"
-"""
+
+
 class TeamRobot(Model):
-    year = Field(int)
-    robot_name = Field(str)
-    key = Field(str)
-    team_key = Field(str)
+    year: int
+    robot_name: str
+    key: str
+    team_key: str
 
 
 class District(Model):
-    abbreviation = Field(str)
-    display_name = Field(str)
-    key = Field(str)
-    year = Field(int)
+    abbreviation: str
+    display_name: str
+    key: str
+    year: int
 
 
 DistrictList = District # in line with API doc name
 
 
 class EventSimple(Model):
-    key = Field(str)
-    name = Field(str)
-    event_code = Field(str)
-    event_type = Field(int)
-    district = District()
-    city = Field(str)
-    state_prov = Field(str)
-    country = Field(str)
-    start_date = Timestamp(fmt="%Y-%m-%d")
-    end_date = Timestamp(fmt="%Y-%m-%d")
-    year = Field(int)
+    key: str
+    name: str
+    event_code: str
+    event_type: int
+    district: District
+    city: str
+    state_prov: str
+    country: str
+    start_date: Timestamp(fmt="%Y-%m-%d")
+    end_date: Timestamp(fmt="%Y-%m-%d")
+    year: int
 
 
 class Webcast(Model):
-    type = Field(str)
-    channel = Field(str)
-    file = Field(str)
+    type: str
+    channel: str
+    file: str
 
 
 class Event(EventSimple):
-    ""
+    """
     key = Field()
     name = Field()
     event_code = Field()
@@ -170,183 +170,183 @@ class Event(EventSimple):
     start_date = Timestamp(fmt="%Y-%m-%d")
     end_date = Timestamp(fmt="%Y-%m-%d")
     year = Field()
-    ""
-    short_name = Field(str)
-    event_type_string = Field(str)
-    week = Field(int)
-    address = Field(str)
-    postal_code = Field(str)
-    gmaps_place_id = Field(str)
-    gmaps_url = Field(str)
-    lat = Field(float)
-    lng = Field(float)
-    location_name = Field(str)
-    timezone = Field(str)
-    website = Field(str)
-    first_event_id = Field(str)
-    first_event_code = Field(str)
-    webcasts = Array(Webcast())
-    division_keys = Array(Field(str))
-    parent_event_key = Field(str)
-    playoff_type = Field(int)
-    playoff_type_string = Field(str)
+    """
+    short_name: str
+    event_type_string: str
+    week: int
+    address: str
+    postal_code: str
+    gmaps_place_id: str
+    gmaps_url: str
+    lat: str
+    lng: str
+    location_name: str
+    timezone: str
+    website: str
+    first_event_id: str
+    first_event_code: str
+    webcasts: List[Webcast]
+    division_keys: List[str]
+    parent_event_key: str
+    playoff_type: int
+    playoff_type_string: str
 
 
 class WLTRecord(Model):
-    losses = Field(int)
-    wins = Field(int)
-    ties = Field(int)
+    losses: int
+    wins: int
+    ties: int
 
 
 class ValueInfo(Model):
-    name = Field(str)
-    precision = Field(int)
+    name: str
+    precision: int
 
 
 class RankingEntry(Model):
-    dq = Field(int)
-    matches_played = Field(int)
-    qual_average = Field(float)
-    rank = Field(int)
-    record = WLTRecord()
-    sort_orders = Array(Field(float))
-    team_key = Field(str)
+    dq: int
+    matches_played: int
+    qual_average: float
+    rank: int
+    record: WLTRecord
+    sort_orders: List[float]
+    team_key: str
 
 
 class BackupTeam(Model):
     __prefix__ = "team_"
-    team_out = Field(str)
-    team_in = Field(str)
+    team_out: str
+    team_in: str
 
 
 class PlayoffStatus(Model):
-    level = Field(str)
-    current_level_record = WLTRecord()
-    record = WLTRecord()
-    status = Field(str)
-    playoff_average = Field(int)
+    level: str
+    current_level_record: WLTRecord
+    record: WLTRecord
+    status: str
+    playoff_average: int
 
 
 class TeamEventStatus(Model):
     class RankStatus(Model):
 
-        num_teams = Field(int)
-        ranking = RankingEntry()
-        sort_order_info = Array(ValueInfo())
-        status = Field(str)
+        num_teams: int
+        ranking: RankingEntry
+        sort_order_info: List[ValueInfo]
+        status: str
 
     class AllianceStatus(Model):
-        name = Field(str)
-        number = Field(int)
-        backup = BackupTeam()
-        pick = Field(int)
+        name: str
+        number: int
+        backup: BackupTeam
+        pick: int
 
-    qual = RankStatus()
-    alliance = AllianceStatus(str)
-    playoff = PlayoffStatus()
-    alliance_status_str = Field(str)
-    playoff_status_str = Field(str)
-    overall_status_str = Field(str)
-    next_match_key = Field(str)
-    last_match_key = Field(str)
+    qual: RankStatus
+    alliance: AllianceStatus
+    playoff: PlayoffStatus
+    alliance_status_str: str
+    playoff_status_str: str
+    overall_status_str: str
+    next_match_key: str
+    last_match_key: str
 
 
 class EventRanking(Model):
     class EventRankingEntry(RankingEntry):
-        extra_stats = Array(Field(float))
-    rankings = Array(EventRankingEntry())
-    extra_stats_info = Array(ValueInfo())
-    sort_order_info = Array(ValueInfo())
+        extra_stats: List[float]
+    rankings: List[EventRankingEntry]
+    extra_stats_info: List[ValueInfo]
+    sort_order_info: List[ValueInfo]
 
 
 class EventDistrictPoints(Model):
     class DistrictPointsData(Model):
-        alliance_points = Field(int)
-        award_points = Field(int)
-        qual_points = Field(int)
-        elim_points = Field(int)
-        total = Field(int)
+        alliance_points: int
+        award_points: int
+        qual_points: int
+        elim_points: int
+        total: int
 
     class TiebreakerData(Model):
-        highest_qual_scores = Array(Field(int))
-        qual_wins = Field(int)
+        highest_qual_scores: List[int]
+        qual_wins: int
 
-    points = Dict(Field(str), DistrictPointsData())
-    tiebreakers = Dict(Field(str), TiebreakerData())
+    points: Dict[str, DistrictPointsData]
+    tiebreakers: Dict[str, TiebreakerData]
 
 
 class EventInsights(Model):
     # heck no i don't want to maintain this every year :(
-    qual = Field(dict)
-    playoff = Field(dict)
+    qual: dict
+    playoff: dict
 
 
 class EventOPRs(Model):
-    oprs = Field(dict)
-    dprs = Field(dict)
-    ccwms = Field(dict)
+    oprs: dict
+    dprs: dict
+    ccwms: dict
 
 
-EventPredictions = Field # year specific, no documented API
+EventPredictions = Any  # year specific, no documented API
 
 
 class MatchAlliance(Model):
-    score = Field(int)
-    team_keys = Array(Field(str))
-    surrogate_team_keys = Array(Field(str))
-    dq_team_keys = Array(Field(str))
+    score: int
+    team_keys: List[str]
+    surrogate_team_keys: List[str]
+    dq_team_keys: List[str]
 
 
 class MatchSimple(Model):
-    key = Field(str)
-    comp_level = Field(str)
-    set_number = Field(int)
-    match_number = Field(int)
-    alliances = Dict(Field(str), MatchAlliance())
-    winning_alliance = Field(str)
-    event_key = Field(str)
-    time = Timestamp(fmt="unix")
-    predicted_time = Timestamp(fmt="unix")
-    actual_time = Timestamp(fmt="unix")
+    key: str
+    comp_level: str
+    set_number: int
+    match_number: int
+    alliances: Dict[str, MatchAlliance]
+    winning_alliance: str
+    event_key: str
+    time: Timestamp(fmt="unix")
+    predicted_time: Timestamp(fmt="unix")
+    actual_time: Timestamp(fmt="unix")
 
 
 class Match(MatchSimple):
     class Video(Model):
-        key = Field(str)
-        type = Field(str)
+        key: str
+        type: str
 
-    post_result_time = Timestamp(fmt="unix")
-    score_breakdown = Field(dict) # aw hell naw
-    videos = Array(Video())
+    post_result_time: Timestamp(fmt="unix")
+    score_breakdown: dict # aw hell naw
+    videos: List[Video]
 
 
 class Media(Model):
-    key = Field(str)
-    type = Field(str)
-    foreign_key = Field(str)
-    details = Field(dict)
-    preferred = Field(bool)
+    key: str
+    type: str
+    foreign_key: str
+    details: dict
+    preferred: bool
 
 
 class EliminationAlliance(Model):
-    name = Field(str)
-    backup = BackupTeam()
-    declines = Array(Field(str))
-    picks = Array(Field(str))
-    status = PlayoffStatus()
+    name: str
+    backup: BackupTeam
+    declines: List[str]
+    picks: List[str]
+    status: PlayoffStatus
 
 
 class AwardRecipient(Model):
-    team_key = Field(str)
-    awardee = Field(str)
+    team_key: str
+    awardee: str
 
 
 class Award(Model):
-    name = Field(str)
-    award_type = Field(int)
-    event_key = Field(str)
-    recipient_list = Array(AwardRecipient())
-    year = Field(int)"""
+    name: str
+    award_type: int
+    event_key: str
+    recipient_list: List[AwardRecipient]
+    year: int
 
 
 def to_model(data, model):
