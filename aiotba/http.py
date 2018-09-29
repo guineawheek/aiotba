@@ -37,7 +37,7 @@ class TBASession:
                 kill.append(endpoint)
         for k in kill:
             del self.cache[k]
-
+    """
     def convert_team_key(self, value):
         if isinstance(value, TeamSimple):
             return value.key
@@ -49,7 +49,7 @@ class TBASession:
         if isinstance(value, EventSimple):
             return value.key
         return str(value)
-
+    """
     async def close(self):
         await self.session.close()
 
@@ -63,7 +63,8 @@ class TBASession:
             exp_time, last_modified, data = self.cache[endpoint]
             headers["If-Modified-Since"] = last_modified
             if time.time() < exp_time:
-                return model.convert(data)
+                return to_model(data, model)
+            # if the cached entry is stale then we don't bother deleting because it's about to update
 
         response = await self.session.get("https://www.thebluealliance.com/api/v3" + endpoint, headers=headers)
         async with response:
@@ -75,29 +76,29 @@ class TBASession:
                     self.cache[endpoint] = (self._get_expire_time(response.headers["Cache-Control"]), response.headers["Last-Modified"], data)
 
             elif response.status == 304:
-                # cache oddity
+                # cache oddity, probably some race condition or dsynched clocks or something stupid
                 pass
             else:
                 raise AioTBAError(f"Request to {endpoint} failed with {response.status} {response.reason}")
 
-            return model.convert(data)
+            return to_model(data, model)
     """
     status
     /teams/[year]/{page}/[keys]
     /team/
     """
     async def status(self):
-        return await self.req('/status', APIStatus())
+        return await self.req('/status', APIStatus)
 
-    async def teams(self, page=None, year=None, keys_only=False):
+    async def teams(self, page=None, year=None, keys_only=False) -> Union[List[Team], List[str]]:
         base = "/teams"
         if year:
             base += f"/{year}"
 
         if keys_only:
-            get_page = lambda n: self.req(base + f"/{n}/keys", Array(Field(str)))
+            get_page = lambda n: self.req(base + f"/{n}/keys", List[str])
         else:
-            get_page = lambda n: self.req(base + f"/{n}", Array(Team()))
+            get_page = lambda n: self.req(base + f"/{n}", List[Team])
 
         if page is not None:
             return await get_page(page)
@@ -105,10 +106,12 @@ class TBASession:
             res = []
             for i in range(100): # unlikely to have this many pages tbh, its here as a failsafe
                 page = await get_page(i)
-                if not page: break
+                if not page:
+                    break
                 res += page
             return res
 
+    """
     async def team(self, team):
         team_key = self.convert_team_key(team)
         return await self.req(f"/team/{team_key}", Team())
@@ -162,3 +165,5 @@ class TBASession:
         base = f"/team/{team_key}"
         if year is not None:
             base += f"/{year}"
+    """
+# done?

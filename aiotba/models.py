@@ -1,45 +1,17 @@
 import datetime
+from typing import Dict, Tuple, List, Union, Any
 
 
-class Field:
-    """base field class, also appropriate for primitives that the json module already converts like int/float/bool/str"""
-    repr_str = ""
 
-    def __init__(self, *args, **kwargs):
-        pass
+class Converter:
+    repr_str = "{hex(id(s))"
 
     def __repr__(self):
         cls = self.__class__
         return f"<{cls.__module__}.{cls.__qualname__}: " + self.repr_str.format(s=self) + ">"
 
 
-    def convert(self, value):
-        return value
-
-
-class Array(Field):
-    def __init__(self, type_):
-       self.cls = type_.__class__
-
-    def convert(self, value):
-        return [self.cls().convert(v) for v in value]
-
-    """mostly for ide purposes?"""
-    def __getitem__(self, item):
-        return self.cls
-
-
-class Dict(Field):
-    """used for coercing trees or things with variable keys, don't use to passthru dicts"""
-    def __init__(self, key_type, value_type):
-        self.key_type = key_type.__class__
-        self.value_type = value_type.__class__
-
-    def convert(self, value):
-        return {self.key_type().convert(k): self.value_type.convert(v) for k, v in value.items()}
-
-
-class Timestamp(Field):
+class Timestamp(Converter):
     def __init__(self, fmt="%Y-%m-%d %H:%M:%S %z"):
         self.fmt = fmt
 
@@ -50,41 +22,32 @@ class Timestamp(Field):
             return datetime.datetime.fromtimestamp(value)
 
 
-class HomeChampionship(Field):
-    def convert(self, value):
+class HomeChampionship(Converter):
+    def __call__(self, value):
         return {int(k): v for k, v in value.items()} if value else {}
 
 
-class ModelType(type):
-    def __new__(mcs, name, bases, attrs):
-        inst = super().__new__(mcs, name, bases, attrs)
-        inst.__map__ = {}
-
-        # pull in base class maps
-        for base in bases:
-            if hasattr(base, "__map__"):
-                inst.__map__.update(base.__map__)
-
-        for attr_name, attr_value in attrs.items():
-            if isinstance(attr_value, Field):
-                inst.__map__[attr_name] = attr_value
-
-        return inst
-
-
-class Model(Field, metaclass=ModelType):
+class Model(Converter):
     __prefix__ = ""
 
-    def convert(self, data):
-        cutoff = len(self.__prefix__)
-        self._data = data
-        for field_name, converter in self.__map__.items():
-            setattr(self, field_name, converter.convert(data[field_name[cutoff:]]))
+    def __init__(self, data):
 
-        return self
+        cutoff = len(self.__prefix__)
+        #self._data = data
+
+        # base classes annotations should be incorporated into the list of fields
+        fields = dict(self.__annotations__)
+        for base in self.__class__.__bases__:
+            if hasattr(base, "__annotations__"):
+                fields.update(base.__annotations__)
+
+        for field_name, field_type in fields.items():
+            print(field_name)
+            # some checks here
+            setattr(self, field_name, to_model(data[field_name[cutoff:]], field_type))
 
     def __contains__(self, item):
-        return item in self.__map__
+        return item in self.__annotations__
 
     def __getitem__(self, key):
         if key not in self:
@@ -96,35 +59,35 @@ class APIStatus(Model):
     """TBA API Status"""
     class Web(Model):
         """a field returned by APIStatus"""
-        commit_time = Timestamp()
-        current_commit = Field(str)
-        deploy_time = Field(str) # the timestamp is unorthodox and can't be parsed by datetime
-        travis_job = Field(str) # a string for some reason
+        commit_time: Timestamp()
+        current_commit: str
+        deploy_time: str # the timestamp is unorthodox and can't be parsed by datetime
+        travis_job: str # a string for some reason
 
     class AppVersion(Model):
-        min_app_version = Field(int)
-        latest_app_version = Field(int)
+        min_app_version: int
+        latest_app_version: int
 
-    current_season = Field(int)
-    max_season = Field(int)
-    is_datafeed_down = Field(bool)
-    down_events = Array(Field(str))
-    ios = AppVersion()
-    android = AppVersion()
+    current_season: int
+    max_season: int
+    is_datafeed_down: bool
+    down_events: List[str]
+    ios: AppVersion
+    android: AppVersion
 
     # questionable but the tba api has it so here we are
-    contbuild_enabled = Field()
-    web = Web()
+    contbuild_enabled: str
+    web: Web
 
 
 class TeamSimple(Model):
-    key = Field(str)
-    team_number = Field(int)
-    nickname = Field(str)
-    name = Field(str)
-    city = Field(str)
-    state_prov = Field(str)
-    country = Field(str)
+    key: str
+    team_number: int
+    nickname: str
+    name: str
+    city: str
+    state_prov: str
+    country: str
 
 
 class Team(TeamSimple):
@@ -138,19 +101,25 @@ class Team(TeamSimple):
     country = Field()
     """
     # these are supposedly NULL, mostly
-    address = Field(str)
-    postal_code = Field(str)
-    gmaps_place_id = Field(str)
-    gmaps_url = Field(str)
-    lat = Field(float)
-    lng = Field(float)
-    location_name = Field(str)
-    website = Field(str)
-    rookie_year = Field(int)
-    motto = Field(str)
+    address: str
+    postal_code: str
+    gmaps_place_id: str
+    gmaps_url: str
+
+    # these would be floats but they get nulled LOL
+    lat: str
+    lng: str
+    location_name: str
+    website: str
+
+    # due to a limitation in TBA's API, rookie_year isn't always available; other methods are needed to determine
+    # rookie year for certain teams, such as iterating over their seasons. Here, we just set it to zero if we see None.
+    rookie_year: lambda d: int(d) if d else 0
+    motto: str
     home_championship = HomeChampionship()
 
     repr_str = "{s.team_number} {s.nickname}"
+"""
 class TeamRobot(Model):
     year = Field(int)
     robot_name = Field(str)
@@ -189,7 +158,7 @@ class Webcast(Model):
 
 
 class Event(EventSimple):
-    """
+    ""
     key = Field()
     name = Field()
     event_code = Field()
@@ -201,7 +170,7 @@ class Event(EventSimple):
     start_date = Timestamp(fmt="%Y-%m-%d")
     end_date = Timestamp(fmt="%Y-%m-%d")
     year = Field()
-    """
+    ""
     short_name = Field(str)
     event_type_string = Field(str)
     week = Field(int)
@@ -377,6 +346,23 @@ class Award(Model):
     award_type = Field(int)
     event_key = Field(str)
     recipient_list = Array(AwardRecipient())
-    year = Field(int)
+    year = Field(int)"""
 
+
+def to_model(data, model):
+    if model is Any:
+        return data # don't even touch it
+    elif model is str:
+        return data if data else ""  # sometimes fields are None, so we return an empty string for type consistency
+
+    if hasattr(model, "__origin__"):
+        # this is a ghetto check for things like List[int] or smth
+        # duck typing amirite
+        if model.__origin__ == list:
+            return [to_model(d, model.__args__[0]) for d in data]
+        elif model.__origin__ == dict:
+            return {to_model(k, model.__args__[0]): to_model(v, model.__args__[1]) for k, v in data.items()}
+
+    # usually you can just call otherwise lol
+    return model(data)
 
