@@ -347,12 +347,14 @@ def to_model(data, model):
     if model is Any:
         return data # don't even touch it
 
+    # this is a ghetto check for things like List[int] or smth
+    # duck typing amirite
     if hasattr(model, "__origin__"):
-        # this is a ghetto check for things like List[int] or smth
-        # duck typing amirite
-        if model.__origin__ == list:
+
+        # the in expr is for 3.6 compat REEEEEEEEEEEEEEEE
+        if model.__origin__ in (list, List):
             return [to_model(d, model.__args__[0]) for d in data]
-        elif model.__origin__ == dict:
+        elif model.__origin__ in (dict, Dict):
             return {to_model(k, model.__args__[0]): to_model(v, model.__args__[1]) for k, v in data.items()}
 
     # usually you can just call otherwise lol
