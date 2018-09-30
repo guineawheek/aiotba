@@ -7,7 +7,7 @@ class Converter:
 
     def __repr__(self):
         cls = self.__class__
-        return f"<{cls.__module__}.{cls.__qualname__}: " + self.repr_str.format(s=self) + ">"
+        return f"<{cls.__module__}.{cls.__qualname__}" + self.repr_str.format(s=self) + ">"
 
 
 class Timestamp(Converter):
@@ -42,7 +42,10 @@ class Model(Converter):
 
         for field_name, field_type in fields.items():
             try:
-                setattr(self, field_name, to_model(data[field_name[cutoff:]], field_type))
+                if field_name[cutoff:] in data:
+                    setattr(self, field_name, to_model(data[field_name[cutoff:]], field_type))
+                else:
+                    setattr(self, field_name, None)
             except TypeError:
                 print(f"REEEEEEE: {field_name}")
                 raise
@@ -110,7 +113,7 @@ class Team(TeamSimple):
     motto: str
     home_championship: HomeChampionship()
 
-    repr_str = "{s.team_number} {s.nickname}"
+    repr_str = ": {s.team_number} {s.nickname}"
 
 
 class TeamRobot(Model):
@@ -171,6 +174,7 @@ class Event(EventSimple):
     playoff_type: int
     playoff_type_string: str
 
+    repr_str = ": {s.name}"
 
 class WLTRecord(Model):
     losses: int

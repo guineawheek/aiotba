@@ -88,7 +88,7 @@ class TBASession:
 
             return to_model(data, model)
 
-    async def status(self):
+    async def status(self) -> APIStatus:
         return await self.req('/status', APIStatus)
 
     async def teams(self, page=None, year=None, keys_only=False) -> Union[List[Team], List[str]]:
@@ -112,23 +112,23 @@ class TBASession:
                 res += page
             return res
 
-    async def team(self, team):
+    async def team(self, team) -> Team:
         team_key = convert_team_key(team)
         return await self.req(f"/team/{team_key}", Team)
 
-    async def team_years_participated(self, team):
+    async def team_years_participated(self, team) -> List[int]:
         team_key = convert_team_key(team)
         return await self.req(f"/team/{team_key}/years_participated", List[int])
 
-    async def team_districts(self, team):
+    async def team_districts(self, team) -> List[District]:
         team_key = convert_team_key(team)
         return await self.req(f"/team/{team_key}/districts", List[District])
 
-    async def team_robots(self, team):
+    async def team_robots(self, team) -> List[TeamRobot]:
         team_key = convert_team_key(team)
         return await self.req(f"/team/{team_key}/robots", List[TeamRobot])
 
-    async def team_events(self, team, year=None, keys_only=False):
+    async def team_events(self, team, year=None, keys_only=False) -> Union[List[Event], List[str]]:
         team_key = convert_team_key(team)
         base = f"/team/{team_key}/events"
         if year is not None:
@@ -138,11 +138,11 @@ class TBASession:
         else:
             return await self.req(base, List[Event])
 
-    async def team_event_statuses(self, team, year):
+    async def team_event_statuses(self, team, year) -> Dict[str, TeamEventStatus]:
         team_key = convert_team_key(team)
         return await self.req(f"/team/{team_key}/events/{year}/statuses", Dict[str, TeamEventStatus])
 
-    async def team_event_matches(self, team, event, keys_only=False):
+    async def team_event_matches(self, team, event, keys_only=False) -> Union[List[Match], List[str]]:
         team_key = convert_team_key(team)
         event_key = convert_key(event)
         if keys_only:
@@ -150,31 +150,31 @@ class TBASession:
         else:
             return await self.req(f"/team/{team_key}/event/{event_key}/matches", List[Match])
 
-    async def team_event_awards(self, team, event):
+    async def team_event_awards(self, team, event) -> List[Award]:
         team_key = convert_team_key(team)
         event_key = convert_key(event)
         return await self.req(f"/team/{team_key}/event/{event_key}/awards", List[Award])
 
-    async def team_event_status(self, team, event):
+    async def team_event_status(self, team, event) -> TeamEventStatus:
         team_key = convert_team_key(team)
         event_key = convert_key(event)
         return await self.req(f"/team/{team_key}/event/{event_key}/status", TeamEventStatus)
 
-    async def team_awards(self, team, year=None):
+    async def team_awards(self, team, year=None) -> List[Award]:
         team_key = convert_team_key(team)
         base = f"/team/{team_key}/awards"
         if year is not None:
             base += f"/{year}"
         return await self.req(base, List[Award])
 
-    async def team_matches(self, team, year, keys_only=False):
+    async def team_matches(self, team, year, keys_only=False) -> Union[List[Match], List[str]]:
         team_key = convert_team_key(team)
         if keys_only:
             return await self.req(f"/team/{team_key}/matches/{year}/keys", List[str])
         else:
             return await self.req(f"/team/{team_key}/matches/{year}", List[Match])
 
-    async def team_media(self, team, year=None, tag=None):
+    async def team_media(self, team, year=None, tag=None) -> List[Media]:
         team_key = convert_team_key(team)
         base = f"/team/{team_key}/media"
         if not (year or tag):
@@ -185,97 +185,97 @@ class TBASession:
             base += f"/{year}"
         return await self.req(base, List[Media])
 
-    async def team_social_media(self, team):
+    async def team_social_media(self, team) -> List[Media]:
         team_key = convert_team_key(team)
         return await self.req(f"/team/{team_key}/social_media", List[Media])
 
     # /event/ endpoints
-    async def events(self, year, keys_only=False):
+    async def events(self, year, keys_only=False) -> Union[List[Event], List[str]]:
         if keys_only:
             return await self.req(f"/events/{year}/keys", List[str])
         else:
             return await self.req(f"/events/{year}", List[Event])
 
-    async def event(self, event_key):
+    async def event(self, event_key) -> Event:
         event_key = convert_key(event_key)
         return await self.req(f"/event/{event_key}", Event)
 
-    async def event_alliances(self, event):
+    async def event_alliances(self, event) -> List[EliminationAlliance]:
         event_key = convert_key(event)
         return await self.req(f"/event/{event_key}/alliances", List[EliminationAlliance])
 
-    async def event_insights(self, event):
+    async def event_insights(self, event) -> EventInsights:
         event_key = convert_key(event)
         return await self.req(f"/event/{event_key}/insights", EventInsights)
 
-    async def event_oprs(self, event):
+    async def event_oprs(self, event) -> EventOPRs:
         event_key = convert_key(event)
         return await self.req(f"/event/{event_key}/oprs", EventOPRs)
 
-    async def event_predictions(self, event):
+    async def event_predictions(self, event) -> EventPredictions:
         event_key = convert_key(event)
         return await self.req(f"/event/{event_key}/predictions", EventPredictions)
 
-    async def event_rankings(self, event):
+    async def event_rankings(self, event) -> EventRankings:
         event_key = convert_key(event)
         return await self.req(f"/event/{event_key}/rankings", EventRankings)
 
-    async def event_district_points(self, event):
+    async def event_district_points(self, event) -> EventDistrictPoints:
         event_key = convert_key(event)
         return await self.req(f"/event/{event_key}/district_points", EventDistrictPoints)
 
-    async def event_teams(self, event, keys_only=False):
+    async def event_teams(self, event, keys_only=False) -> Union[List[Team], List[str]]:
         event_key = convert_key(event)
         if keys_only:
             return await self.req(f"/event/{event_key}/teams/keys", List[str])
         else:
             return await self.req(f"/event/{event_key}/teams", List[Team])
 
-    async def event_teams_statuses(self, event):
+    async def event_teams_statuses(self, event) -> Dict[str, TeamEventStatus]:
         event_key = convert_key(event)
         return await self.req(f"/event/{event_key}/teams/statuses", Dict[str, TeamEventStatus])
 
-    async def event_matches(self, event, keys_only=False):
+    async def event_matches(self, event, keys_only=False) -> Union[List[Team], List[str]]:
         event_key = convert_key(event)
         if keys_only:
             return await self.req(f"/event/{event_key}/matches/keys", List[str])
         else:
             return await self.req(f"/event/{event_key}/matches", List[Team])
 
-    async def event_matches_timeseries(self, event):
+    async def event_matches_timeseries(self, event) -> List[str]:
         event_key = convert_key(event)
         return await self.req(f"/event/{event_key}/matches/timeseries", List[str])
 
-    async def event_awards(self, event):
+    async def event_awards(self, event) -> List[Award]:
         event_key = convert_key(event)
         return await self.req(f"/event/{event_key}/awards", List[Award])
 
     # /match endpoints
-    async def match(self, match):
+    async def match(self, match) -> Match:
         match_key = convert_key(match)
         return await self.req(f"/match/{match_key}", Match)
 
-    async def match_timeseries(self, match):
+    async def match_timeseries(self, match) -> List[dict]:
         match_key = convert_key(match)
         return await self.req(f"/match/{match_key}/timeseries", List[dict])
 
-    async def districts(self, year):
+    async def districts(self, year) -> List[District]:
         return await self.req(f"/districts/{year}", List[District])
 
-    async def district_events(self, district, keys_only=False):
+    async def district_events(self, district, keys_only=False) -> Union[List[Event], List[str]]:
         district_key = convert_key(district)
         if keys_only:
             return await self.req(f"/district/{district_key}/events/keys", List[str])
         else:
             return await self.req(f"/district/{district_key}/events", List[Event])
 
-    async def district_teams(self, district, keys_only=False):
+    async def district_teams(self, district, keys_only=False) -> Union[List[Team], List[str]]:
         district_key = convert_key(district)
         if keys_only:
             return await self.req(f"/district/{district_key}/teams/keys", List[str])
         else:
             return await self.req(f"/district/{district_key}/teams", List[Team])
 
-    async def district_rankings(self, district):
+    async def district_rankings(self, district) -> List[DistrictRanking]:
         district_key = convert_key(district)
         return await self.req(f"/district/{district_key}/rankings", List[DistrictRanking])
