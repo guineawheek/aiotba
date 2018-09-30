@@ -8,7 +8,7 @@ with open("requirements.txt") as f:
 
 setuptools.setup(
     name="aiotba",
-    version="0.0.1",
+    version="0.0.2",
     author="guineawheek",
     author_email="guineawheek@gmail.com",
     license="MIT",
