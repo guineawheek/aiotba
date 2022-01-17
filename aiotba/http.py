@@ -78,7 +78,7 @@ class TBASession:
                 if self.cache_enabled:
                     if len(self.cache) > self.max_cache:
                         self.prune_cache()
-                    self.cache[endpoint] = (_get_expire_time(response.headers["Cache-Control"]), response.headers["Last-Modified"], data)
+                    self.cache[endpoint] = (_get_expire_time(response.headers["Cache-Control"]), data)
 
             elif response.status == 304:
                 # cache oddity, probably some race condition or dsynched clocks or something stupid
