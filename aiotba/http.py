@@ -49,7 +49,7 @@ class TBASession:
         if not self.cache_enabled:
             return
         kill = []
-        for endpoint, (exp_time, last_modified, data) in self.cache.items():
+        for endpoint, (exp_time, etag, data) in self.cache.items():
             if exp_time < time.time():
                 kill.append(endpoint)
         for k in kill:
@@ -65,8 +65,8 @@ class TBASession:
 
         headers = {"X-TBA-Auth-Key": self.key}
         if endpoint in self.cache: # wont fire if cache not enabled as cache will be stuck empty
-            exp_time, last_modified, data = self.cache[endpoint]
-            headers["If-Modified-Since"] = last_modified
+            exp_time, etag, data = self.cache[endpoint]
+            headers["If-None-Match"] = etag
             if time.time() < exp_time:
                 return to_model(data, model)
             # if the cached entry is stale then we don't bother deleting because it's about to update
@@ -78,7 +78,7 @@ class TBASession:
                 if self.cache_enabled:
                     if len(self.cache) > self.max_cache:
                         self.prune_cache()
-                    self.cache[endpoint] = (_get_expire_time(response.headers["Cache-Control"]), data)
+                    self.cache[endpoint] = (_get_expire_time(response.headers["Cache-Control"]), response.headers['ETag'], data)
 
             elif response.status == 304:
                 # cache oddity, probably some race condition or dsynched clocks or something stupid
